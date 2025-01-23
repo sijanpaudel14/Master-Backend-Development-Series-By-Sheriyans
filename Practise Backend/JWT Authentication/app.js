@@ -1,3 +1,4 @@
+// Learned how to set and read cookies in browser
 const cookieParser = require('cookie-parser');
 const express = require('express');
 const app = express();
