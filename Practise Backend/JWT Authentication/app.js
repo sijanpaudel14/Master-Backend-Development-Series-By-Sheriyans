@@ -1,17 +1,15 @@
 // Learned how to set and read cookies in browser
-const cookieParser = require('cookie-parser');
 const express = require('express');
 const app = express();
-app.use(cookieParser());
+const bcrypt = require('bcrypt');
 
 app.get("/", function(req, res){
-    res.cookie("name", "harsh");
-    res.send("home");
-})
-
-app.get("/read", function(req, res){
-    console.log(req.cookies);
-    res.send("read page");
+    bcrypt.genSalt(10, function(err, salt){
+        bcrypt.hash("pololololo", salt, function(err, hash){
+            // Store hash in your password DB
+            console.log(hash);
+        });
+    });
 })
 
 app.listen(3000);
