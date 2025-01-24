@@ -17,19 +17,61 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-
 app.get("/", (req, res) => {
   res.render("index");
 });
 
-
 app.get("/login", (req, res) => {
-    res.render("login");
+  res.render("login");
 });
 
-app.get("/profile", isLoggedIn, (req, res) => {
-    console.log(req.user);
-    res.redirect("login");
+app.get("/profile", isLoggedIn, async (req, res) => {
+  let user = await userModel
+    .findOne({ email: req.user.email })
+    .populate("posts");
+
+  res.render("profile", { user });
+});
+
+app.get("/like/:id", isLoggedIn, async (req, res) => {
+  let post = await postModel.findOne({ _id: req.params.id }).populate("user");
+
+  if(post.likes.indexOf(req.user.userid) === -1){
+      post.likes.push(req.user.userid);
+
+  }
+  else {
+    post.likes.splice(post.likes.indexOf(req.user.userid), 1);
+  }
+
+  await post.save();
+  res.redirect("/profile");
+});
+
+app.get("/edit/:id", isLoggedIn, async (req, res) => {
+  let post = await postModel.findOne({ _id: req.params.id }).populate("user");
+
+  res.render('edit', {post});
+});
+
+app.post("/update/:id", isLoggedIn, async (req, res) => {
+  let post = await postModel.findOneAndUpdate({ _id: req.params.id }, {content: req.body.content});
+
+  res.redirect('/profile');
+});
+
+app.post("/post", isLoggedIn, async (req, res) => {
+  let user = await userModel.findOne({ email: req.user.email });
+  let { content } = req.body;
+  let post = await postModel.create({
+    user: user._id,
+    content,
+  });
+  console.log(post);
+
+  user.posts.push(post._id);
+  await user.save();
+  res.redirect("/profile");
 });
 
 app.post("/register", async (req, res) => {
@@ -38,7 +80,7 @@ app.post("/register", async (req, res) => {
   let user = await userModel.findOne({ email });
   if (user) {
     req.flash("error_msg", "User already registered");
-    return res.redirect("/"); 
+    return res.redirect("/");
   }
 
   bcrypt.genSalt(10, (err, salt) => {
@@ -57,50 +99,50 @@ app.post("/register", async (req, res) => {
 
       // Flash success message
       req.flash("success_msg", "You have successfully registered!");
-      res.redirect("/"); 
+      res.redirect("/");
     });
   });
 });
 
-
 app.post("/login", async (req, res) => {
-  let {email, password} = req.body;
+  let { email, password } = req.body;
 
   let user = await userModel.findOne({ email });
   if (!user) {
     req.flash("error_msg", "Something went wrong!!");
-    return res.redirect("/login"); 
+    return res.redirect("/login");
   }
 
-  bcrypt.compare(password, user.password, (err, result ) => {
-    if (result){
-        req.flash("success_msg", "Your are successfully logged in!!");
-        let token = jwt.sign({ email: email, userid: user._id }, "shhhh");
-        res.cookie("token", token);
-        return res.redirect("/");
+  bcrypt.compare(password, user.password, (err, result) => {
+    if (result) {
+      req.flash("success_msg", "Your are successfully logged in!!");
+      let token = jwt.sign({ email: email, userid: user._id }, "shhhh");
+      res.cookie("token", token);
+      res.redirect("/profile");
+    } else {
+      req.flash("error_msg", "Something went wrong!!");
+      res.redirect("/login");
     }
-    else {
-        req.flash("error_msg", "Something went wrong!!");
-        res.redirect('/login');
-    }
-  })
- 
+  });
 });
 
 app.get("/logout", (req, res) => {
-    res.cookie("token", "");
-    res.redirect("/login"); 
+  res.cookie("token", "");
+  res.redirect("/login");
 });
 
-function isLoggedIn(req, res, next){
-    if (req.cookies.token === "") res.send("You must be logged in");
-    else{
-        let data = jwt.verify(req.cookies.token, "shhhh");
-        req.user = data;
-        next();
-    }
-}
+function isLoggedIn(req, res, next) {
+  if (!req.cookies.token) return res.redirect("/login");
 
+  try {
+    let data = jwt.verify(req.cookies.token, "shhhh");
+    req.user = data;
+    next();
+  } catch (error) {
+    console.error("Invalid token:", error);
+    res.redirect("/login");
+  }
+}
 
 app.listen(3000, () => {
   console.log("Server is running on http://localhost:3000");
