@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-zinc-900 text-white">
+    <div class="w-full min-h-screen p-10">
+        <h3 class="text-2xl mb-5">Create an account:</h3>
+
+        <!-- Flash Messages -->
+        <% if (success_msg && success_msg.length > 0) { %>
+            <div class="bg-green-500 text-white px-3 py-2 rounded-md mb-4">
+                <%= success_msg[0] %>
+            </div>
+        <% } %>
+
+        <% if (error_msg && error_msg.length > 0) { %>
+            <div class="bg-red-500 text-white px-3 py-2 rounded-md mb-4">
+                <%= error_msg[0] %>
+            </div>
+        <% } %>
+
+        <!-- Registration Form -->
+        <form action="/register" method="post">
+            <input class="bg-transparent outline-none rounded-md px-3 py-2 border-2 border-zinc-700 text-white mb-3" 
+                   type="text" name="name" placeholder="Name" required>
+            <input class="bg-transparent outline-none rounded-md px-3 py-2 border-2 border-zinc-700 text-white mb-3" 
+                   type="text" name="username" placeholder="Username" required>
+            <input class="bg-transparent outline-none rounded-md px-3 py-2 border-2 border-zinc-700 text-white mb-3" 
+                   type="password" name="password" placeholder="Password" required>
+            <input class="bg-transparent outline-none rounded-md px-3 py-2 border-2 border-zinc-700 text-white mb-3" 
+                   type="number" name="age" placeholder="Age" required>
+            <input class="bg-transparent outline-none rounded-md px-3 py-2 border-2 border-zinc-700 text-white mb-3" 
+                   type="email" name="email" placeholder="Email" required>
+            <input class="bg-blue-500 rounded-md px-5 py-2 w-max" type="submit" value="Create Account">
+        </form>
+    </div>
+</body>
+</html>
